@@ -1,0 +1,44 @@
+Import numpy as np
+from scipy.stats import lognorm
+import matplotlib.pyplot as plt
+
+
+def get_base_mu_and_sigma(mean, sd):
+    # a helper function.  If Y is a lognormal RV based on an underlying normal RV X s.t. Y = exp(X),
+    # and if Y has an actual (measured) 'mean' and 'sd' as its mean and stdev, then return a tuple
+    # which is the mu and sigma for the underlying X.  N.B.: it is arguable that with return distributions,
+    # where mu~1.1 and sigma~0.20, that sigma itself should be the underyling sigma of the X distribution.
+    # the error is small (a Y sigma of .20 becomes about .185), so I have done this assuming people are
+    # truly using historical data and have a realized (historical) number to use.  But, see Shreve, vol II, p. 91.
+    
+    # the following comes straight from Wikipedia...
+    mu = math.log(mean**2.0 / (sd**2.0 + mean**2.0)**0.5)
+    sigma = (math.log(1.0 + sd**2.0/mean**2.0))**0.5
+    
+    return mu, sigma
+
+mu1, sigma1 = get_base_mu_and_sigma(4,1)
+RV1 = lognorm(s=sigma1, scale=math.exp(mu1))  # frozen RV with many attributes
+mu2, sigma2 = get_base_mu_and_sigma(4,1)
+RV2 = lognorm(s=sigma2, scale=math.exp(mu2))  # frozen RV with many attributes
+        
+x1s = linspace(0, 10, 200)
+x2s = linspace(0, 10, 200)
+
+RV1 = lognorm(s=sigma1, scale=math.exp(mu1)) 
+RV2 = lognorm(s=sigma2, scale=math.exp(mu2))
+
+y1s = RV1.pdf(x1s)
+y2s = RV1.pdf(x1s)
+
+plt.plot(x1s, y1s)
+plt.show(x2s, y2s)
+
+
+
+x = np.arange(1, 10000000, 1000)
+
+mu, sigma = get_base_mu_and_sigma(100000, 1)
+
+# set up the portfolio rv as a Dirac-delta
+rv = lognorm(s=sigma, scale=math.exp(mu)) 

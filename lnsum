@@ -1,0 +1,77 @@
+import numpy as np
+from scipy.stats import lognorm
+import math as math
+import matplotlib.pyplot as plt
+from scipy import signal
+
+
+def get_base_mu_and_sigma(mean, sd):
+    # a helper function.  If Y is a lognormal RV based on an underlying normal RV X s.t. Y = exp(X),
+    # and if Y has an actual (measured) 'mean' and 'sd' as its mean and stdev, then return a tuple
+    # which is the mu and sigma for the underlying X.  N.B.: it is arguable that with return
+    # distributions, where mu~1.1 and sigma~0.20, that sigma itself should be the underyling
+    # sigma of the X distribution.
+
+    mu = math.log(mean**2.0 / (sd**2.0 + mean**2.0)**0.5)
+    sigma = (math.log(1.0 + sd**2.0/mean**2.0))**0.5
+    
+    return mu, sigma
+
+mu1, sigma1 = get_base_mu_and_sigma(4,1)
+RV1 = lognorm(s=sigma1, scale=math.exp(mu1))  # frozen RV with many attributes
+mu2, sigma2 = get_base_mu_and_sigma(4,1)
+RV2 = lognorm(s=sigma2, scale=math.exp(mu2))  # frozen RV with many attributes
+        
+
+"""
+using 2 RVs, iid ~LN(4,1), what is their sum?  It is 7.99... and 1.999.  Thus, the mean 
+is slightly less than the additive sum, and the stdev is simply the sum, not the sum of 
+squares.
+
+TO-DO: test with a more skewed distribution
+"""
+
+
+x1s = np.linspace(0, 10, 200)    # magic numbers
+x2s = np.linspace(0, 10, 200)    # magic numbers
+
+RV1 = lognorm(s=sigma1, scale=math.exp(mu1)) 
+RV2 = lognorm(s=sigma2, scale=math.exp(mu2))
+
+y1s = RV1.pdf(x1s)
+y2s = RV1.pdf(x1s)
+
+plt.plot(x1s, y1s)
+plt.show()
+
+plt.plot(x2s, y2s)
+plt.show()
+
+z_ys = signal.convolve(y1s, y2s, method='fft')
+
+stride = x1s[1] - x1s[0]
+
+z_xs = np.arange(x1s[0]+x2s[0], x1s[-1]+x2s[-1] + stride, stride)
+
+plt.plot(z_xs, z_ys)
+plt.show()
+
+z_ys = z_ys/z_ys.sum()
+
+plt.plot(z_xs, z_ys)
+plt.show()
+
+# check what the mean, stdev are vs. naive adding
+
+z_ys = z_ys/z_ys.sum()
+
+mean = (z_xs * z_ys).sum()
+variance = abs((z_ys * ((z_xs - mean) ** 2)).sum() * (len(z_xs) + 1) / len(z_xs))
+stdev = variance ** 0.5
+
+print("mean, variance, stdev = " + '{: >-6,.6f}'.format(mean) + "  " +
+                                   '{: >-6,.6f}'.format(variance) + "  " +
+				   '{: >-6,.6f}'.format(stdev))
+
+
+
